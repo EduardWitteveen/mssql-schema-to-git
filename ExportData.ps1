@@ -108,7 +108,7 @@ function Export-ObjectCollection {
                 Remove-Item $tempFile -ErrorAction SilentlyContinue
             }
             # Voeg een statische header toe
-            $header = "-- Created with https://github.com/eduardwitteveen/sqlserver-export-git`n--`n"
+            $header = "-- Created with https://github.com/EduardWitteveen/mssql-schema-to-git/`n--`n"
             $combinedContent = $header + $scriptContent
             $targetFile = Join-Path $targetFolder "$($obj.Name).sql"
             $combinedContent | Out-File -FilePath $targetFile -Encoding UTF8

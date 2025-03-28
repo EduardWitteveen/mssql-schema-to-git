@@ -23,7 +23,7 @@ The goal is to:
 ## Installation
 
 1. Copy and adjust the `ExportConfig.json` file with the desired server and database combinations.
-2. Run `RunExport.bat` (this will invoke `InitializeEnvironment.ps1` and then `ExportData.ps1`).  
+2. Run `RunExport.bat` (this will invoke `InitializeEnvironment.ps1` and then `ExportData.ps1`). ℹ️ Tip: The exported schema files are stored outside this project directory (e.g., `../mssql-schema-to-git-export`) to allow using a separate Git repository for version tracking. This keeps the main tooling clean and maintainable.
 3. If required, initialize Git: `git init`  
 4. Track the exported SQL files: `git add .`  
 5. Commit: `git commit -m "Initial schema export"`  
