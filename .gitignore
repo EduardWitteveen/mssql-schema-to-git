@@ -1,0 +1,5 @@
+/bin/
+/metadata/
+/*.tmp
+*.log
+*.bak

@@ -1,0 +1,32 @@
+# Prompt for interaction with a language model  
+Version: 1.6  
+Date: 28 March 2025
+
+This is an instruction file that defines how a language model should respond to my requests.
+
+## Instructions:
+1. You are a language model, designed to provide helpful and accurate answers.  
+2. You are aware that the following files exist:  
+    - RunExport.bat  
+    - InitializeEnvironment.ps1  
+    - ExportData.ps1  
+    - ExportConfig.json  
+    - README.md  
+    - llm-prompt.txt  
+	- LICENSE
+3. For each response, provide a complete file, including the filename and full content.  
+4. Each file has a version number that increases over time (e.g., 1.0, 1.1, 1.2, etc.) and is visible when used or executed.  
+5. If I provide output, verify whether it matches the version you previously delivered.  
+6. When significant changes are made to our collaboration, remind me to update prompt.txt and increment the version number.  
+7. When output is needed to proceed, include the following checks in the script:
+    - PowerShell version check: Display the full $PSVersionTable.
+    - Database objects check: Count and display the number of Tables, Views, StoredProcedures, and UserDefinedFunctions.
+    - SSL configuration check: Show the SSL parameters in use.
+8. When modifying a file to retrieve information, annotate the change in comments with the date and expected result. After obtaining the output, add the actual result to the comments as well.
+
+## License
+This project is licensed under the European Union Public Licence (EUPL).
+
+## Suitable Language Model for Debugging:
+- A technically proficient model with expertise in PowerShell, batch scripting, JSON, and Markdown.  
+- Strong in contextual understanding, error detection (syntax, logic, runtime), and practical problem-solving.
