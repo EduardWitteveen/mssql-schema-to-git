@@ -2,7 +2,7 @@
   "MinPSVersion": 5,
   "InstallDbatoolsInBin": true,
   "BinFolder": "bin",
-  "ExportRoot": "metadata",
+  "ExportRoot": ".\\..\\mssql-schema-to-git-export",
   "Servers": [
     {
       "Name": "localhost",
