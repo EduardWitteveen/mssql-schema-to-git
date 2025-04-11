@@ -70,7 +70,11 @@ try {
     exit 1
 }
 
-$exportRoot = Join-Path $PSScriptRoot $json.ExportRoot  # Bijvoorbeeld .\metadata
+if ([System.IO.Path]::IsPathRooted($json.ExportRoot)) {
+    $exportRoot = $json.ExportRoot	# Bijvoorbeeld c:\metadata
+} else {
+    $exportRoot = Join-Path $PSScriptRoot $json.ExportRoot	# Bijvoorbeeld .\metadata
+}
 if (-not (Test-Path $exportRoot)) {
     New-Item -Path $exportRoot -ItemType Directory | Out-Null
     Write-Host "Aangemaakt: $exportRoot"
@@ -95,7 +99,15 @@ function Export-ObjectCollection {
     if (-not (Test-Path $targetFolder)) {
         New-Item -Path $targetFolder -ItemType Directory | Out-Null
     }
-    foreach ($obj in $Objects) {
+	# Ga alles bij langs, behalve de System objecten en de tijdelijke objecten
+	foreach ($obj in $Objects | Where-Object { 
+		-not $_.IsSystemObject -and 
+		-not ($_.Name -like '#*') -and 
+		-not ($_.Name -like 'BankLetterData*') -and 
+		-not ($_.Name -like 'TempToBeReceivedDelivered*') -and 
+		-not ($_.Name -like 'ZZZZ*') -and 
+		-not ($_.Name -like 'sys*')		
+	}) {
         try {
             # Schrijf de output van Export-DbaScript naar een tijdelijk bestand met -FilePath
             $tempFile = [System.IO.Path]::GetTempFileName()
@@ -130,6 +142,21 @@ foreach ($serverDef in $json.Servers) {
         if (-not (Test-Path $dbExportPath)) {
             New-Item -Path $dbExportPath -ItemType Directory | Out-Null
         }
+        
+        # --- Verplaats alle bestaande folders naar 'Obsolete', behalve 'Obsolete' zelf ---
+        $obsoletePath = Join-Path $dbExportPath 'Obsolete'
+        if (-not (Test-Path $obsoletePath)) {
+            New-Item -Path $obsoletePath -ItemType Directory | Out-Null
+        }
+        
+        # Pak alle directories in $dbExportPath
+        Get-ChildItem -Path $dbExportPath -Directory | Where-Object { $_.Name -ne 'Obsolete' } | ForEach-Object {
+            $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+            $destinationFolder = Join-Path $obsoletePath "$($_.Name)_$timestamp"
+            Move-Item -Path $_.FullName -Destination $destinationFolder
+            Write-Host "    Verplaatst oude folder '$($_.Name)' naar '$destinationFolder'."
+        }
+        
         try {
             $dbObject = Get-DbaDatabase -SqlInstance $serverName -Database $dbName
         } catch {
