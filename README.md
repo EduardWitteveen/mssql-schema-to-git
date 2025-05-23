@@ -30,6 +30,12 @@ The goal is to:
 6. Push to your remote repository.
 
 ## Configuration (`ExportConfig.json`)
+> ℹ️ Achtung: don't commit your configfile!
+
+1. First copy the sample-configfile:
+ ```powershell
+   Copy-Item ExportConfig.sample.json ExportConfig.json
+```
 
 The configuration file has the following structure:
 

@@ -1,6 +1,6 @@
 # Prompt for interaction with a language model  
-Version: 1.6  
-Date: 28 March 2025
+Version: 1.7  
+Date: 23 May 2025
 
 This is an instruction file that defines how a language model should respond to my requests.
 
@@ -24,6 +24,7 @@ This is an instruction file that defines how a language model should respond to 
     - SSL configuration check: Show the SSL parameters in use.
 8. When modifying a file to retrieve information, annotate the change in comments with the date and expected result. After obtaining the output, add the actual result to the comments as well.
 9. Export directory is expected to be outside this project structure, e.g., ../mssql-schema-to-git-export
+10. `ExportConfig.json` is vervangen door een `.sample`-bestand. AI-modellen moeten controleren of `ExportConfig.json` aanwezig is en gebruikers instrueren om het bestand aan te maken vanuit `ExportConfig.sample.json`.
 
 
 ## License

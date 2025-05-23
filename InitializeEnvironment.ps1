@@ -1,18 +1,17 @@
 <#
 .SYNOPSIS
-   Installs and configures the required tooling and sets up the environment.
+   Installeert en configureert de vereiste tooling en zet de omgeving klaar.
 
 .DESCRIPTION
-   - Reads configuration from ExportConfig.json.
-   - Verifies the current PowerShell version.
-   - Attempts to install or update the latest version of dbatools (optionally into a local "bin" folder) and imports it.
-   - Adjusts the execution policy for the current user to allow running downloaded modules.
-   - Unblocks module files so they can be imported.
-   - Disables SSL certificate validation to avoid issues with self-signed certificates.
+   - Leest configuratie uit ExportConfig.json (of instrueert gebruiker om deze aan te maken).
+   - Controleert de huidige PowerShell-versie.
+   - Installeert of update dbatools (optioneel in lokale "bin" map) en importeert deze.
+   - Past de execution policy aan.
+   - Blokkeert geen modulebestanden.
+   - Schakelt SSL-certificaatvalidatie uit (voor zelf-ondertekende certificaten).
 
 .NOTES
-   This script should run with elevated privileges (administrator).
-   Make sure you have sufficient permissions.
+   Dit script moet **niet per se als administrator** worden uitgevoerd, tenzij modules nog niet zijn geïnstalleerd.
 
 .VERSION HISTORY
   1.0   Initial version.
@@ -22,17 +21,31 @@
   1.4   Added SSL configuration check.
   1.5   Corrected version number.
   1.6   Added Update-Module dbatools, extensive logging, execution policy adjustment, and SSL certificate validation disabling.
-  1.7   **New:** Displays the currently available dbatools version before continuing.
+  1.7   Displays the currently available dbatools version before continuing.
+  1.8   Check op ontbrekende ExportConfig.json en instructie om sample te kopiëren.
 #>
 
 param(
     [string]$ConfigFile = "$PSScriptRoot\ExportConfig.json"
 )
 
-Write-Host "InstallatieTooling.ps1 Versie 1.7"
-Write-Host "================================="
+Write-Host "InitializeEnvironment.ps1 Versie 1.8"
+Write-Host "===================================="
 
-# --- Controleer of er een dbatools-module beschikbaar is en toon het versienummer ---
+# --- Controleer of ExportConfig.json bestaat ---
+if (!(Test-Path $ConfigFile)) {
+    $sampleFile = "$PSScriptRoot\ExportConfig.sample.json"
+    Write-Warning "Configbestand ontbreekt: $ConfigFile"
+    if (Test-Path $sampleFile) {
+        Write-Host "`nMaak een kopie van het voorbeeldbestand:"
+        Write-Host "    Copy-Item `"$sampleFile`" `"$ConfigFile`""
+    } else {
+        Write-Host "`nHet voorbeeldbestand ($sampleFile) is ook niet gevonden."
+    }
+    exit 1
+}
+
+# --- Toon beschikbare dbatools-versie ---
 $currentDbatools = Get-Module dbatools -ListAvailable | Sort-Object Version -Descending | Select-Object -First 1
 if ($currentDbatools) {
     Write-Host "Huidige beschikbare dbatools versie: $($currentDbatools.Version)"
@@ -40,7 +53,7 @@ if ($currentDbatools) {
     Write-Host "Geen dbatools-module gevonden in de modulepaden."
 }
 
-# --- Zet de execution policy voor de huidige gebruiker ---
+# --- Zet execution policy ---
 try {
     Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
     Write-Host "Execution policy ingesteld op RemoteSigned voor de huidige gebruiker."
@@ -48,11 +61,7 @@ try {
     Write-Warning "Kon de execution policy niet aanpassen: $_"
 }
 
-# --- Stap 1: Lees de configuratie ---
-if (!(Test-Path $ConfigFile)) {
-    Write-Error "Configfile niet gevonden: $ConfigFile"
-    exit 1
-}
+# --- Lees configuratie ---
 try {
     $json = Get-Content -Path $ConfigFile -Raw | ConvertFrom-Json
 } catch {
@@ -60,7 +69,7 @@ try {
     exit 1
 }
 
-# --- Stap 2: Controleer PowerShell-versie ---
+# --- Controleer PowerShell-versie ---
 $minPS = $json.MinPSVersion
 if ($PSVersionTable.PSVersion.Major -lt $minPS) {
     Write-Error "Je draait PS-versie $($PSVersionTable.PSVersion.Major), maar minimaal $minPS is vereist. Stop."
@@ -68,7 +77,7 @@ if ($PSVersionTable.PSVersion.Major -lt $minPS) {
 }
 Write-Host "PowerShell-versie OK (>= $minPS)."
 
-# --- Stap 3: dbatools installeren en importeren ---
+# --- dbatools installeren ---
 Write-Host "`n=== dbatools controleren/installeren ==="
 $installInBin = $json.InstallDbatoolsInBin -eq $true
 $binFolder = Join-Path $PSScriptRoot $json.BinFolder
@@ -105,7 +114,7 @@ function Import-LocalDbatools {
 
 try {
     if (Get-Module dbatools -ListAvailable) {
-        Write-Host "dbatools lijkt al geïnstalleerd (globaal of user-scope). Importeer module..."
+        Write-Host "dbatools lijkt al geïnstalleerd. Importeer module..."
         Import-Module dbatools -Force -ErrorAction SilentlyContinue
     } else {
         $importOk = Import-LocalDbatools -BinDir $binFolder
@@ -131,7 +140,7 @@ try {
 
 Write-Host "`ndbatools is nu geladen. Versie: $(Get-Module dbatools | Select-Object -ExpandProperty Version)"
 
-# --- Stap 4: Schakel SSL-certificaatvalidatie uit ---
+# --- SSL-certificaatvalidatie uitschakelen ---
 Write-Host "`n=== SSL-certificaatvalidatie uitschakelen ==="
 function Disable-CertificateValidation {
     if(-not ([System.Management.Automation.PSTypeName]'TrustAllCertsPolicy').Type) {

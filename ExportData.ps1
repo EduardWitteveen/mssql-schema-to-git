@@ -20,14 +20,33 @@
    1.7   [2025-03-14] Added: Display installed dbatools version before starting.
    1.9   [2025-03-14] Replaced -OutputFile with -FilePath, added temporary file output.
    1.11  [2025-03-14] Removed auto-generated header (via regex) and inserted static header instead.
+   1.12  [2025-05-23] Added: Safe filename escaping for invalid characters in exported object names.
 #>
 
 param(
     [string]$ConfigFile = "$PSScriptRoot\ExportConfig.json"
 )
 
-Write-Host "ExportData.ps1 Versie 1.11"
+Write-Host "ExportData.ps1 Versie 1.12"
 Write-Host "---------------------------"
+
+function Get-SafeFilename {
+    param([string]$rawName)
+
+    $invalids = [System.IO.Path]::GetInvalidFileNameChars()
+    $safeName = ""
+
+    foreach ($char in $rawName.ToCharArray()) {
+        if ($invalids -contains $char) {
+            $hex = [int][char]$char
+            $safeName += "_0x{0:X2}_" -f $hex
+        } else {
+            $safeName += $char
+        }
+    }
+
+    return $safeName
+}
 
 # Controleer of de dbatools-module beschikbaar is en toon het versienummer.
 $currentDbatools = Get-Module dbatools -ListAvailable | Sort-Object Version -Descending | Select-Object -First 1
@@ -122,7 +141,9 @@ function Export-ObjectCollection {
             # Voeg een statische header toe
             $header = "-- Created with https://github.com/EduardWitteveen/mssql-schema-to-git/`n--`n"
             $combinedContent = $header + $scriptContent
-            $targetFile = Join-Path $targetFolder "$($obj.Name).sql"
+            #$targetFile = Join-Path $targetFolder "$($obj.Name).sql"
+            $safeName = Get-SafeFilename -rawName $obj.Name
+            $targetFile = Join-Path $targetFolder "$safeName.sql"
             $combinedContent | Out-File -FilePath $targetFile -Encoding UTF8
             Write-Host "    -> Export van $($obj.Name) naar $targetFolder geslaagd."
         } catch {
